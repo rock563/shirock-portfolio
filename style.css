@@ -119,3 +119,7 @@ dialog .pointer-pixels{z-index:3}
 #viewer-close,#index-close,#about-close{min-width:44px;min-height:44px}
 .site-header nav a,.site-header nav button{min-height:44px;display:flex;align-items:center;justify-content:center}
 @media(pointer:coarse){.site-header nav a,.site-header nav button{min-width:44px}}
+
+/* 长索引滚动时保留关闭入口，编号与深色缩略图之间保持清晰对比。 */
+.index-dialog .dialog-top{position:sticky;top:0;z-index:5;background:#f3ebdd;padding-bottom:8px}
+.index-photo span{padding:2px 4px;background:#f3ebdd;color:#263641;text-shadow:none}
