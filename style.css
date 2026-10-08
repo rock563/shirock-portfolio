@@ -71,7 +71,7 @@ html{scroll-padding-top:var(--chapter-offset)}
 .chapter-atmosphere{position:sticky;top:0;height:100svh;width:100%;background:var(--chapter-bg) var(--chapter-art) center/contain no-repeat}
 
 
-/* 指针始终使用系统鼠标，装饰画布不拦截点击且位于照片上方。 */
+/* 照片页使用系统指针；装饰画布不拦截点击。 */
 .pointer-pixels{position:fixed;inset:0;width:100vw;height:100dvh;z-index:35;pointer-events:none}
 dialog .pointer-pixels{z-index:3}
 .viewer-toolbar,.viewer-bottom,.dialog-top{position:relative;z-index:4}
@@ -92,19 +92,17 @@ dialog .pointer-pixels{z-index:3}
 .landscape,.landscape svg,.landscape svg *{cursor:default;-webkit-user-select:none;user-select:none}
 .hero-lettering{pointer-events:none}
 
-/* 联系彩蛋：水面的微光可被拾起，祝福在发现后才浮现。 */
-#contact-signal{position:absolute;left:70%;top:67%;right:auto;bottom:auto;z-index:4;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:none;font-size:0;transform:translate(-50%,-50%);outline:none}
-#contact-signal:before{content:'';position:absolute;left:50%;top:50%;width:24px;height:9px;transform:translate(-50%,-50%) rotate(-9deg);border:1px solid #6294b16b;border-radius:50%;transition:border-color .3s}
-#contact-signal span{position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:#fff4ce;box-shadow:0 0 5px 2px #e4bd7380,0 0 17px 5px #67a0c454;transform:translate(-50%,-50%);animation:contact-glimmer 3s ease-in-out infinite;transition:box-shadow .3s}
-#contact-signal:hover span,#contact-signal:focus-visible span{box-shadow:0 0 7px 3px #e4bd73b3,0 0 22px 8px #67a0c480}
-#contact-signal:hover:before,#contact-signal:focus-visible:before{border-color:#36769ec7}
+/* 渔船上的蓝白小灯是彩蛋入口，位置随背景的实际缩放计算。 */
+#contact-signal{position:absolute;left:53.5%;top:58%;right:auto;bottom:auto;z-index:4;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:none;font-size:0;transform:translate(-50%,-50%);outline:none}
+#contact-signal span{position:absolute;left:50%;top:50%;width:4px;height:4px;border:.5px solid #a1d9ed;border-radius:50%;background:#f5fcff;box-shadow:0 0 3px 2px #effbff,0 0 8px 4px #67b8dcaa,0 0 17px 7px #8db9d654;transform:translate(-50%,-50%);animation:contact-glimmer 3s ease-in-out infinite;transition:box-shadow .3s}
+#contact-signal:hover span,#contact-signal:focus-visible span{box-shadow:0 0 4px 3px #edfaff,0 0 12px 6px #67b8dccc,0 0 20px 8px #8db9d666}
 #contact-signal[aria-expanded="true"] span{animation:none}
 .about-dialog .contact-secret{position:relative;z-index:4;gap:7px;align-items:flex-start;width:fit-content}
 .contact-secret:not([hidden]){display:flex;flex-direction:column;animation:contact-discovery .65s ease-out both}
 .signal-note{font-size:12px;letter-spacing:.03em;color:#486d88}
-@keyframes contact-glimmer{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes contact-glimmer{0%,100%{opacity:.8}50%{opacity:1}}
 @keyframes contact-discovery{from{opacity:0;transform:translateY(7px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
-@media(max-width:600px){#contact-signal{top:77%}}
+@media(pointer:fine){.about-dialog.sailing,.about-dialog.sailing *{cursor:none}}
 .photo{aspect-ratio:var(--ratio);background:#26364108;overflow:hidden}
 .photo .photo-preview{width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .25s}
 .photo.preview-ready .photo-preview{opacity:1}

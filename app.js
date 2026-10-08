@@ -219,28 +219,50 @@ function initChapterPixels(){
  document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(frame);frame=0;fields.forEach(f=>{f.particles=[];f.context.clearRect(0,0,f.width,f.height);});}});
 }
 
-// 小范围的蓝色水面：常驻的柔和水光与随移动衰减的细碎波纹。
+// 彩蛋页：插画中的渔船成为指针，尾迹只有开放的括号弧线。
 {
  const dialog=$('#about-dialog'),water=$('#contact-water'),ctx=water.getContext('2d');
- let waves=[],frame=0,width=0,height=0,point=null,lastEmit=0;
- function resize(){const r=dialog.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);width=r.width;height=r.height;water.width=Math.round(width*dpr);water.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
- new ResizeObserver(()=>{if(dialog.open)resize();}).observe(dialog);
- function wake(now){
-  ctx.clearRect(0,0,width,height);waves=waves.filter(w=>now-w.start<750);
-  waves.forEach(w=>{const t=(now-w.start)/750,r=5+t*12;ctx.save();ctx.translate(w.x,w.y);ctx.rotate(w.angle);ctx.strokeStyle=`rgba(26,88,145,${(1-t)*.26})`;ctx.lineWidth=.7;
-   // 开放且不规则的弧线，保留水面方向感，避免同心圆扩散。
-   for(let side=0;side<2;side++){ctx.beginPath();for(let k=0;k<=16;k++){const a=(side?Math.PI:0)+.4+k/16*1.8;const rr=r+Math.sin(a*3+w.phase+t*5)*1.1;const x=Math.cos(a)*rr,y=Math.sin(a)*rr*.52;k?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();}ctx.restore();
-  });
-  if(point){const r=11+Math.sin(now*.003)*.8,g=ctx.createRadialGradient(point.x-2,point.y-2,1,point.x,point.y,r);g.addColorStop(0,'rgba(77,157,211,.18)');g.addColorStop(.5,'rgba(33,104,168,.10)');g.addColorStop(1,'rgba(33,104,168,0)');ctx.fillStyle=g;ctx.fillRect(point.x-r,point.y-r,r*2,r*2);
-   ctx.beginPath();ctx.ellipse(point.x,point.y,8,5,-.2,.3,2.6);ctx.strokeStyle='rgba(31,96,155,.45)';ctx.lineWidth=.85;ctx.stroke();ctx.beginPath();ctx.ellipse(point.x-1,point.y-1,6,3,-.2,3.3,5.4);ctx.strokeStyle='rgba(255,255,255,.75)';ctx.stroke();
-  }
-  frame=dialog.open&&(point||waves.length)&&!reduced?requestAnimationFrame(wake):0;
+ let waves=[],frame=0,width=0,height=0,point=null,lastEmit=0,boatSprite=null,boatLoading=false;
+ function resize(){
+  const r=dialog.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);width=r.width;height=r.height;water.width=Math.round(width*dpr);water.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
+  // 背景为 2400×1600，居中靠底 contain；灯固定在船尾桅杆顶端。
+  const scale=Math.min(width/2400,height/1600);
+  contactSignal.style.left=((width-2400*scale)/2+1290*scale)+'px';
+  contactSignal.style.top=(height-1600*scale+925*scale)+'px';
+  if(point)drawBoat();
  }
- function move(e){if(!fine||e.pointerType==='touch'||!dialog.open)return;const r=dialog.getBoundingClientRect(),next={x:e.clientX-r.left,y:e.clientY-r.top},now=performance.now();if(next.x<0||next.y<0||next.x>r.width||next.y>r.height)return;
-  if(!width)resize();if(point&&!reduced&&now-lastEmit>45&&Math.hypot(next.x-point.x,next.y-point.y)>2){waves.push({x:point.x,y:point.y,start:now,angle:Math.atan2(next.y-point.y,next.x-point.x),phase:Math.random()*Math.PI});waves=waves.slice(-12);lastEmit=now;}point=next;if(!frame){if(reduced)wake(now);else frame=requestAnimationFrame(wake);}
+ new ResizeObserver(()=>{if(dialog.open)resize();}).observe(dialog);
+ $('#about-open').addEventListener('click',()=>{resize();if(fine)prepareBoat();});
+ function prepareBoat(){
+  if(boatSprite||boatLoading)return;boatLoading=true;
+  const art=new Image();art.onload=()=>{
+   const sprite=document.createElement('canvas');sprite.width=430;sprite.height=165;
+   const ink=sprite.getContext('2d',{willReadFrequently:true});ink.drawImage(art,910,887,430,165,0,0,430,165);
+   const pixels=ink.getImageData(0,0,430,165);
+   // 只留下原图的蓝色油墨：船身、吊臂和斑驳笔触均来自同一幅插画。
+   for(let i=0;i<pixels.data.length;i+=4){const r=pixels.data[i],g=pixels.data[i+1],b=pixels.data[i+2];pixels.data[i+3]=b>g+7?Math.min(255,Math.max(0,(b-r-18)*5)):0;}
+   ink.putImageData(pixels,0,0);boatSprite=sprite;boatLoading=false;
+   if(point&&dialog.open){dialog.classList.add('sailing');if(!frame)wake(performance.now());}
+  };
+  art.onerror=()=>{boatLoading=false;};art.src=assetUrl('contact-illustration.webp');
+ }
+ function drawBoat(){
+  if(!point||!boatSprite)return;ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(boatSprite,point.x-27,point.y-12,54,165/430*54);ctx.restore();
+ }
+ function wake(now){
+  ctx.clearRect(0,0,width,height);waves=waves.filter(w=>now-w.start<680);
+  waves.forEach(w=>{const t=(now-w.start)/680,gap=9+t*4,half=5+t*2;ctx.save();ctx.translate(w.x,w.y);ctx.strokeStyle=`rgba(22,67,110,${Math.pow(1-t,1.5)*.42})`;ctx.lineWidth=.85;ctx.lineCap='round';
+   // 两道不相接的括号，不画圆、椭圆或闭合水纹。
+   ctx.beginPath();ctx.moveTo(-gap,-half);ctx.quadraticCurveTo(-gap-5,0,-gap,half);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(gap,-half);ctx.quadraticCurveTo(gap+5,0,gap,half);ctx.stroke();ctx.restore();
+  });
+  drawBoat();frame=dialog.open&&waves.length&&!reduced?requestAnimationFrame(wake):0;
+ }
+ function move(e){if(!fine||e.pointerType==='touch'||!dialog.open)return;const r=dialog.getBoundingClientRect(),next={x:e.clientX-r.left,y:e.clientY-r.top},now=performance.now();if(next.x<0||next.y<0||next.x>r.width||next.y>r.height){clear();return;}
+  if(!width)resize();if(point&&!reduced&&now-lastEmit>65&&Math.hypot(next.x-point.x,next.y-point.y)>6){waves.push({x:point.x,y:point.y,start:now});waves=waves.slice(-8);lastEmit=now;}point=next;if(boatSprite)dialog.classList.add('sailing');if(!frame)wake(now);
  }
  dialog.addEventListener('pointermove',move);dialog.addEventListener('pointerenter',move);dialog.addEventListener('pointerdown',move);
- dialog.addEventListener('pointerleave',()=>{point=null;if(reduced)ctx.clearRect(0,0,width,height);});
- function clear(){cancelAnimationFrame(frame);frame=0;waves=[];point=null;ctx.clearRect(0,0,width,height);}
- dialog.addEventListener('close',clear);document.addEventListener('visibilitychange',()=>{if(document.hidden)clear();});
+ dialog.addEventListener('pointerleave',()=>{point=null;dialog.classList.remove('sailing');if(!frame)wake(performance.now());});
+ function clear(){cancelAnimationFrame(frame);frame=0;waves=[];point=null;lastEmit=0;dialog.classList.remove('sailing');ctx.clearRect(0,0,width,height);}
+ dialog.addEventListener('close',clear);addEventListener('blur',clear);document.addEventListener('visibilitychange',()=>{if(document.hidden)clear();});
 }
