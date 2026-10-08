@@ -84,3 +84,6 @@ dialog .pointer-pixels{z-index:3}
 .viewer-canvas img{transition:opacity .18s}
 .site-header nav,.chapter-nav,.index-group h3{font-size:14px}
 @media(max-width:600px){.site-header nav,.chapter-nav,.viewer-toolbar h2{font-size:13px}}
+
+/* 关闭按钮保持纯叉号，弹窗自动聚焦时不显示方形外框。 */
+#viewer-close,#index-close,#about-close{outline:none;box-shadow:none}
