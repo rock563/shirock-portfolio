@@ -110,7 +110,9 @@ function renderChapters(){
 function renderIndex(){
  $('#index-list').replaceChildren(...chapters.map(ch=>{
   const group=document.createElement('section');group.className='index-group';group.dataset.chapter=ch.id;const h=document.createElement('h3');h.textContent=ch.name;const grid=document.createElement('div');grid.className='index-thumbs';const list=listFor(ch);
-  list.forEach((p,i)=>{const b=document.createElement('button');b.className='index-photo';b.setAttribute('aria-label','查看 '+photoLabel(p));const im=new Image();im.decoding='async';im.alt='';im.width=p.thumbWidth;im.height=Math.round(p.thumbWidth*p.height/p.width);const no=document.createElement('span');no.textContent=pad(i+1);b.append(im,no);progressivePhotos.set(b,{preview:()=>loadImage(src(p,true),0).then(url=>{im.src=url;}).catch(()=>{})});previewObserver.observe(b);b.addEventListener('click',()=>{closeDialog($('#index-dialog'));openPhoto(p.id,list);});grid.append(b);});group.append(h,grid);return group;
+  list.forEach((p,i)=>{const b=document.createElement('button');b.className='index-photo';b.setAttribute('aria-label','查看 '+photoLabel(p));const im=new Image();im.decoding='async';im.alt='';im.width=p.thumbWidth;im.height=Math.round(p.thumbWidth*p.height/p.width);const no=document.createElement('span');no.textContent=pad(i+1);b.append(im,no);
+   const preview=()=>{b.classList.remove('index-unavailable');return loadImage(src(p,true),0).catch(()=>loadImage(assetUrl(p.medium),0)).then(url=>{im.src=url;}).catch(()=>{b.classList.add('index-unavailable');});};
+   progressivePhotos.set(b,{preview});previewObserver.observe(b);b.addEventListener('click',()=>{if(b.classList.contains('index-unavailable'))preview();closeDialog($('#index-dialog'));openPhoto(p.id,list);});grid.append(b);});group.append(h,grid);return group;
  }));
 }
 let readingFrame=0;

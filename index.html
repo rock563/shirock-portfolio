@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SHIROCK · 摄影作品集</title><meta name="shirock-build" content="fast-1"><meta name="description" content="SHIROCK 摄影作品集。山与途中、窗与空间、夜与微光、日常与生命。">
+<title>SHIROCK · 摄影作品集</title><meta name="shirock-build" content="fast-2"><meta name="description" content="SHIROCK 摄影作品集。山与途中、窗与空间、夜与微光、日常与生命。">
 <meta name="theme-color" content="#f4ebdc"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f4ebdc'/%3E%3Ctext x='7' y='24' font-family='sans-serif' font-size='24' fill='%23263641'%3ES%3C/text%3E%3C/svg%3E">
 <link rel="preload" as="font" href="assets/fonts/oswald-latin.woff2" type="font/woff2" crossorigin><style>@font-face{font-family:'Oswald';font-style:normal;font-weight:500 600;font-display:swap;src:url('assets/fonts/oswald-latin.woff2') format('woff2')}
 :root{color-scheme:light;--bg:#f4ebdc;--text:#263641;--muted:#536570;--line:#26364126;--accent:#40617a}*{box-sizing:border-box}html{scroll-behavior:auto;scroll-padding-top:145px}body{margin:0;background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased}h1,h2,h3,p{margin:0}button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}a{color:inherit;text-decoration:none}a,button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}button:disabled{opacity:.25}button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:7px}img{display:block;max-width:100%}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}::selection{background:#b8ccd7;color:#0b1014}body.dialog-open{overflow:hidden}
@@ -119,6 +119,12 @@ dialog .pointer-pixels{z-index:3}
 .viewer-load{position:absolute;inset:auto 0 20px;z-index:2;text-align:center;font-size:13px;line-height:1.7;pointer-events:none}
 #viewer-status:not([hidden]){display:inline-block;padding:5px 12px;background:#f4ebdce8;border-radius:3px}
 #viewer-retry{pointer-events:auto;margin-left:10px;padding:6px 12px;border:1px solid #26364155;border-radius:3px;background:#f4ebdc}
+
+/* 索引加载失败时仍能找到入口；手机上的关闭与导航按钮有足够点击范围。 */
+.index-photo.index-unavailable:before{content:'点击查看';font-size:11px;line-height:1.5;color:#536570;pointer-events:none}
+#viewer-close,#index-close,#about-close{min-width:44px;min-height:44px}
+.site-header nav a,.site-header nav button{min-height:44px;display:flex;align-items:center;justify-content:center}
+@media(pointer:coarse){.site-header nav a,.site-header nav button{min-width:44px}}
 </style>
 </head>
 <body>
@@ -265,7 +271,9 @@ function renderChapters(){
 function renderIndex(){
  $('#index-list').replaceChildren(...chapters.map(ch=>{
   const group=document.createElement('section');group.className='index-group';group.dataset.chapter=ch.id;const h=document.createElement('h3');h.textContent=ch.name;const grid=document.createElement('div');grid.className='index-thumbs';const list=listFor(ch);
-  list.forEach((p,i)=>{const b=document.createElement('button');b.className='index-photo';b.setAttribute('aria-label','查看 '+photoLabel(p));const im=new Image();im.decoding='async';im.alt='';im.width=p.thumbWidth;im.height=Math.round(p.thumbWidth*p.height/p.width);const no=document.createElement('span');no.textContent=pad(i+1);b.append(im,no);progressivePhotos.set(b,{preview:()=>loadImage(src(p,true),0).then(url=>{im.src=url;}).catch(()=>{})});previewObserver.observe(b);b.addEventListener('click',()=>{closeDialog($('#index-dialog'));openPhoto(p.id,list);});grid.append(b);});group.append(h,grid);return group;
+  list.forEach((p,i)=>{const b=document.createElement('button');b.className='index-photo';b.setAttribute('aria-label','查看 '+photoLabel(p));const im=new Image();im.decoding='async';im.alt='';im.width=p.thumbWidth;im.height=Math.round(p.thumbWidth*p.height/p.width);const no=document.createElement('span');no.textContent=pad(i+1);b.append(im,no);
+   const preview=()=>{b.classList.remove('index-unavailable');return loadImage(src(p,true),0).catch(()=>loadImage(assetUrl(p.medium),0)).then(url=>{im.src=url;}).catch(()=>{b.classList.add('index-unavailable');});};
+   progressivePhotos.set(b,{preview});previewObserver.observe(b);b.addEventListener('click',()=>{if(b.classList.contains('index-unavailable'))preview();closeDialog($('#index-dialog'));openPhoto(p.id,list);});grid.append(b);});group.append(h,grid);return group;
  }));
 }
 let readingFrame=0;

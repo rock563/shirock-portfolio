@@ -113,3 +113,9 @@ dialog .pointer-pixels{z-index:3}
 .viewer-load{position:absolute;inset:auto 0 20px;z-index:2;text-align:center;font-size:13px;line-height:1.7;pointer-events:none}
 #viewer-status:not([hidden]){display:inline-block;padding:5px 12px;background:#f4ebdce8;border-radius:3px}
 #viewer-retry{pointer-events:auto;margin-left:10px;padding:6px 12px;border:1px solid #26364155;border-radius:3px;background:#f4ebdc}
+
+/* 索引加载失败时仍能找到入口；手机上的关闭与导航按钮有足够点击范围。 */
+.index-photo.index-unavailable:before{content:'点击查看';font-size:11px;line-height:1.5;color:#536570;pointer-events:none}
+#viewer-close,#index-close,#about-close{min-width:44px;min-height:44px}
+.site-header nav a,.site-header nav button{min-height:44px;display:flex;align-items:center;justify-content:center}
+@media(pointer:coarse){.site-header nav a,.site-header nav button{min-width:44px}}
