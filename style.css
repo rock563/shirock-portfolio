@@ -32,10 +32,10 @@ footer{background:#f3ebdd;color:#3c302b}
 .chapter{position:relative;isolation:isolate}
 .chapter-backdrop{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:clip}
 .chapter-backdrop:before{content:'';display:block;position:sticky;top:0;height:100svh;background-image:var(--chapter-art);background-repeat:no-repeat;background-size:contain;background-position:center;background-color:var(--chapter-bg)}
-.chapter-mountains{--chapter-art:url('assets/background-mountains.webp')}
-.chapter-frames{--chapter-art:url('assets/background-frames.webp')}
-.chapter-light{--chapter-art:url('assets/background-light.webp')}
-.chapter-life{--chapter-art:url('assets/background-life.webp')}
+.chapter-mountains.art-ready{--chapter-art:url('assets/background-mountains.webp?v=images-2')}
+.chapter-frames.art-ready{--chapter-art:url('assets/background-frames.webp?v=images-2')}
+.chapter-light.art-ready{--chapter-art:url('assets/background-light.webp?v=images-2')}
+.chapter-life.art-ready{--chapter-art:url('assets/background-life.webp?v=images-2')}
 
 /* 插画首页、紧凑导航与浅色索引。 */
 :root{--header-height:64px;--nav-height:48px;--chapter-offset:112px}
@@ -60,7 +60,7 @@ html{scroll-padding-top:var(--chapter-offset)}
 .about-dialog{background:#f3ebdd;color:#263641;color-scheme:light}.about-dialog::backdrop{background:#eee5d1d9}.about-dialog p{font-size:16px;color:#4b5b63}.about-dialog button:focus-visible{outline-color:#263641}
 
 .index-thumbs{grid-template-columns:repeat(6,minmax(0,1fr))}.index-photo{min-width:0;width:100%;overflow:hidden}.index-photo span{color:#263641;text-shadow:0 1px 3px #f3ebdd}
-.about-dialog{width:min(90vw,630px);height:min(80dvh,360px);max-height:none;padding:46px 45px;overflow:hidden;background:#f4edde url('assets/contact-illustration.webp') center bottom/contain no-repeat;color:#153f70;isolation:isolate}
+.about-dialog{width:min(90vw,630px);height:min(80dvh,360px);max-height:none;padding:46px 45px;overflow:hidden;background:#f4edde url('assets/contact-illustration.webp?v=images-2') center bottom/contain no-repeat;color:#153f70;isolation:isolate}
 .about-dialog h2,.about-dialog p{position:relative;z-index:2;color:#153f70}
 .about-dialog h2{font-size:clamp(44px,6vw,64px);margin-bottom:18px}
 .about-dialog>button{z-index:3;color:#153f70}
@@ -105,3 +105,13 @@ dialog .pointer-pixels{z-index:3}
 @keyframes contact-glimmer{0%,100%{opacity:.55}50%{opacity:1}}
 @keyframes contact-discovery{from{opacity:0;transform:translateY(7px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
 @media(max-width:600px){#contact-signal{top:77%}}
+.photo{aspect-ratio:var(--ratio);background:#26364108;overflow:hidden}
+.photo .photo-preview{width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .25s}
+.photo.preview-ready .photo-preview{opacity:1}
+.photo .photo-detail{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .3s}
+.photo.detail-ready .photo-detail{opacity:1}
+.photo-message{position:absolute;inset:0;align-items:center;justify-content:center;line-height:1.7;font-size:13px;color:var(--chapter-muted,#536570)}
+.photo-message:not([hidden]){display:flex}
+.viewer-load{position:absolute;inset:auto 0 20px;z-index:2;text-align:center;font-size:13px;line-height:1.7;pointer-events:none}
+#viewer-status:not([hidden]){display:inline-block;padding:5px 12px;background:#f4ebdce8;border-radius:3px}
+#viewer-retry{pointer-events:auto;margin-left:10px;padding:6px 12px;border:1px solid #26364155;border-radius:3px;background:#f4ebdc}
