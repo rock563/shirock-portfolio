@@ -22,6 +22,14 @@ $('#index-open').addEventListener('click',()=>showDialog($('#index-dialog')));
 $('#index-close').addEventListener('click',()=>closeDialog($('#index-dialog')));
 $('#about-open').addEventListener('click',()=>showDialog($('#about-dialog')));
 $('#about-close').addEventListener('click',()=>closeDialog($('#about-dialog')));
+const contactSignal=$('#contact-signal'),contactSecret=$('#contact-secret');
+contactSignal.addEventListener('click',()=>{
+ const reveal=contactSecret.hidden;contactSecret.hidden=!reveal;
+ contactSignal.setAttribute('aria-expanded',String(reveal));
+});
+$('#about-dialog').addEventListener('close',()=>{
+ contactSecret.hidden=true;contactSignal.setAttribute('aria-expanded','false');
+});
 function listFor(chapter){return chapter.order.map(id=>photos.find(p=>p.id===id));}
 function photoButton(p,list,desktop='40vw',mobile='45vw'){
  const b=document.createElement('button');b.className='photo reveal';b.style.setProperty('--ratio',p.width/p.height);b.dataset.photo=p.id;b.dataset.favorite=String(p.favorite);b.setAttribute('aria-label','查看 '+photoLabel(p));
