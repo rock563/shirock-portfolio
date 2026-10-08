@@ -219,10 +219,10 @@ function initChapterPixels(){
  document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(frame);frame=0;fields.forEach(f=>{f.particles=[];f.context.clearRect(0,0,f.width,f.height);});}});
 }
 
-// 彩蛋页：插画中的渔船成为指针，尾迹只有开放的括号弧线。
+// 彩蛋页：最右侧的渔船成为指针，船尾留下沿航行方向散开的尾流。
 {
  const dialog=$('#about-dialog'),water=$('#contact-water'),ctx=water.getContext('2d');
- let waves=[],frame=0,width=0,height=0,point=null,lastEmit=0,boatSprite=null,boatLoading=false;
+ let waves=[],frame=0,width=0,height=0,point=null,lastEmit=0,boatSprite=null,boatLoading=false,boatFacing=1,wakeDistance=0;
  function resize(){
   const r=dialog.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);width=r.width;height=r.height;water.width=Math.round(width*dpr);water.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
   // 背景为 2400×1600，居中靠底 contain；灯固定在船尾桅杆顶端。
@@ -236,10 +236,10 @@ function initChapterPixels(){
  function prepareBoat(){
   if(boatSprite||boatLoading)return;boatLoading=true;
   const art=new Image();art.onload=()=>{
-   const sprite=document.createElement('canvas');sprite.width=430;sprite.height=165;
-   const ink=sprite.getContext('2d',{willReadFrequently:true});ink.drawImage(art,910,887,430,165,0,0,430,165);
-   const pixels=ink.getImageData(0,0,430,165);
-   // 只留下原图的蓝色油墨：船身、吊臂和斑驳笔触均来自同一幅插画。
+   const sprite=document.createElement('canvas');sprite.width=137;sprite.height=126;
+   const ink=sprite.getContext('2d',{willReadFrequently:true});ink.drawImage(art,1192,916,137,126,0,0,137,126);
+   const pixels=ink.getImageData(0,0,137,126);
+   // 只取最右边这一艘船，保留原图的蓝色油墨和斑驳笔触。
    for(let i=0;i<pixels.data.length;i+=4){const r=pixels.data[i],g=pixels.data[i+1],b=pixels.data[i+2];pixels.data[i+3]=b>g+7?Math.min(255,Math.max(0,(b-r-18)*5)):0;}
    ink.putImageData(pixels,0,0);boatSprite=sprite;boatLoading=false;
    if(point&&dialog.open){dialog.classList.add('sailing');if(!frame)wake(performance.now());}
@@ -247,22 +247,26 @@ function initChapterPixels(){
   art.onerror=()=>{boatLoading=false;};art.src=assetUrl('contact-illustration.webp');
  }
  function drawBoat(){
-  if(!point||!boatSprite)return;ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(boatSprite,point.x-27,point.y-12,54,165/430*54);ctx.restore();
+  if(!point||!boatSprite)return;ctx.save();ctx.translate(point.x,point.y);ctx.scale(boatFacing,1);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(boatSprite,-18,-17,36,126/137*36);ctx.restore();
  }
  function wake(now){
   ctx.clearRect(0,0,width,height);waves=waves.filter(w=>now-w.start<680);
-  waves.forEach(w=>{const t=(now-w.start)/680,gap=9+t*4,half=5+t*2;ctx.save();ctx.translate(w.x,w.y);ctx.strokeStyle=`rgba(22,67,110,${Math.pow(1-t,1.5)*.42})`;ctx.lineWidth=.85;ctx.lineCap='round';
-   // 两道不相接的括号，不画圆、椭圆或闭合水纹。
-   ctx.beginPath();ctx.moveTo(-gap,-half);ctx.quadraticCurveTo(-gap-5,0,-gap,half);ctx.stroke();
-   ctx.beginPath();ctx.moveTo(gap,-half);ctx.quadraticCurveTo(gap+5,0,gap,half);ctx.stroke();ctx.restore();
+  waves.forEach(w=>{const t=(now-w.start)/680,back=t*6,spread=3+t*7;ctx.save();ctx.translate(w.x,w.y);ctx.rotate(w.angle);ctx.strokeStyle=`rgba(22,67,110,${Math.pow(1-t,1.5)*.38})`;ctx.lineWidth=.75;ctx.lineCap='round';
+   // 船尾两侧向后外展的短水纹，沿移动轨迹形成逐渐散开的航迹。
+   for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(-back,side*spread);ctx.quadraticCurveTo(-back-6,side*(spread+1),-back-14,side*(spread+3));ctx.stroke();}
+   ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(-back-3,0);ctx.lineTo(-back-7,0);ctx.stroke();ctx.restore();
   });
   drawBoat();frame=dialog.open&&waves.length&&!reduced?requestAnimationFrame(wake):0;
  }
  function move(e){if(!fine||e.pointerType==='touch'||!dialog.open)return;const r=dialog.getBoundingClientRect(),next={x:e.clientX-r.left,y:e.clientY-r.top},now=performance.now();if(next.x<0||next.y<0||next.x>r.width||next.y>r.height){clear();return;}
-  if(!width)resize();if(point&&!reduced&&now-lastEmit>65&&Math.hypot(next.x-point.x,next.y-point.y)>6){waves.push({x:point.x,y:point.y,start:now});waves=waves.slice(-8);lastEmit=now;}point=next;if(boatSprite)dialog.classList.add('sailing');if(!frame)wake(now);
+  if(!width)resize();
+  if(point){const dx=next.x-point.x,dy=next.y-point.y,distance=Math.hypot(dx,dy);if(Math.abs(dx)>.5)boatFacing=dx>0?-1:1;wakeDistance+=distance;
+   if(!reduced&&distance>.1&&now-lastEmit>40&&wakeDistance>7){const ux=dx/distance,uy=dy/distance;waves.push({x:next.x-ux*18,y:next.y+10-uy*18,start:now,angle:Math.atan2(dy,dx)});waves=waves.slice(-16);lastEmit=now;wakeDistance=0;}
+  }
+  point=next;if(boatSprite)dialog.classList.add('sailing');if(!frame)wake(now);
  }
  dialog.addEventListener('pointermove',move);dialog.addEventListener('pointerenter',move);dialog.addEventListener('pointerdown',move);
- dialog.addEventListener('pointerleave',()=>{point=null;dialog.classList.remove('sailing');if(!frame)wake(performance.now());});
- function clear(){cancelAnimationFrame(frame);frame=0;waves=[];point=null;lastEmit=0;dialog.classList.remove('sailing');ctx.clearRect(0,0,width,height);}
+ dialog.addEventListener('pointerleave',()=>{point=null;wakeDistance=0;dialog.classList.remove('sailing');if(!frame)wake(performance.now());});
+ function clear(){cancelAnimationFrame(frame);frame=0;waves=[];point=null;lastEmit=0;wakeDistance=0;boatFacing=1;dialog.classList.remove('sailing');ctx.clearRect(0,0,width,height);}
  dialog.addEventListener('close',clear);addEventListener('blur',clear);document.addEventListener('visibilitychange',()=>{if(document.hidden)clear();});
 }
